@@ -1,20 +1,47 @@
 fn main() {
-    let data: Vec<i32> = vec![1, 2, 3, 4];
-    let data1 = &data;
-    println!(
-        "addr of value:\t{:p} ({:p}),\naddr of  data:\t{:p},\naddr of data1:\t{:p},\naddr of   vec:\t{:p} ",
-        &data, data1, &&data, &data1, data.as_ptr()
-    );
+    let u = User {
+        active: false,
+        username: String::from("haha"),
+        email: String::from("sdsf"),
+        sign_in_count: 88,
+    };
+    println!("{:#?}", u);
 
-    // 打印 data 的地址（存储在栈上）
-    println!("Address of data on stack:\t{:p}", &data);
+    let u2 = User {
+        username: String::from("ttt"),
+        email: String::from("xxxx"),
+        ..u
+    };
 
-    // 打印 Vec 的堆内存地址（数据存储在堆上）
-    let ptr = data.as_ptr();
-    println!("Address of Vec's heap memory:\t{:?}", ptr);
+    let members = vec![u, u2];
+    let c = Class{
+        s_num:6,
+        g_num:6,
+        year: String::from("2025"),
+        members,
+    };
+    println!("{:#?}", c);
 
-    // 打印 Vec 中每个元素的地址
-    for (i, element) in data.iter().enumerate() {
-        println!("Address of element {}: {:p}", i, element);
-    }
+    let _color = Color(0,0,0);
+    let _mi32 = Myi32(1);
+    
 }
+
+#[derive(Debug)]
+struct User {
+    active: bool,
+    username: String,
+    email: String,
+    sign_in_count: u64,
+}
+
+#[derive(Debug)]
+struct Class {
+    s_num: u32,
+    g_num: u32,
+    year: String,
+    members: Vec<User>,
+}
+
+struct Color(i32,i32,i32);
+struct Myi32(i32);
