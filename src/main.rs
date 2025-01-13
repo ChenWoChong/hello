@@ -65,11 +65,86 @@ fn main() {
         5..19 => println!("Big"),
         _ => println!("Other"),
     }
+
+    let my_enum = MyEnum::Subtract;
+    if let MyEnum::Add = my_enum {
+        println!("1");
+    } else {
+        println!("2");
+    }
+
+    let mut num = 9;
+    let mut enum_a = MyEnum::Div;
+    while let MyEnum::Div = enum_a {
+        if num >= 0 {
+            println!("Greater than 0 {}", num);
+            num -= 1;
+        } else {
+            println!("Less    than 0 {}", num);
+            enum_a = MyEnum::Add;
+        }
+    }
+
+    let shape_a = Shape::Triangle(Triangle {
+        width: 12,
+        height: 13,
+    });
+    let Shape::Triangle(Triangle { width, height }) = shape_a else {
+        panic!("can't extract triangle..");
+    };
+    println!("width: {}, height: {}", width, height);
+
+    let a = (1, 'a', "hahah");
+    let (b, c, d) = a;
+    println!("{b} {c} {d}");
+
+    let mut v = vec![Some(1), Some(2), Some(3)];
+
+    while let Some(Some(i)) = v.pop() {
+        println!("got {}", i);
+    }
+
+    let refs = &42;
+    match refs {
+        &v => println!("refs points to: {}", v),
+    }
+
+    let mut stu = Student {
+        name: "Chen".to_string(),
+        age: 30,
+        student: false,
+    };
+
+    let Student {
+        ref mut name,
+        age,
+        student: students,
+    } = stu;
+    println!("name {}", name);
+    *name = "wochong".to_string();
+    println!("name {}", name);
+    println!("age {}", age);
+    println!("student {}", students);
+    println!("{:?}", stu);
+
+    let tmp = (1,2,'c');
+    foo(tmp);
+
+    fooStu(stu);
 }
 
+#[derive(Debug)]
+struct Student {
+    name: String,
+    age: i32,
+    student: bool,
+}
+
+#[derive(PartialEq, Debug)]
 enum MyEnum {
     Add,
     Subtract,
+    Div,
 }
 
 impl MyEnum {
@@ -77,6 +152,7 @@ impl MyEnum {
         match self {
             Self::Add => x + y,
             Self::Subtract => x - y,
+            Self::Div => x + y,
         }
     }
 }
@@ -124,4 +200,16 @@ enum WebEvent {
     KeyPress(char),
     Paste(String),
     Click { x: i64, y: i64 },
+}
+
+fn foo((a, b, c): (u32, u32, char)) {
+    println!("{}", a);
+    println!("{}", b);
+    println!("{}", c);
+}
+
+fn fooStu(Student{name, age,student}: Student) {
+    println!("{name}");
+    println!("{age}");
+    println!("{student}");
 }
