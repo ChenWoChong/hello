@@ -1,215 +1,136 @@
+use std::collections::HashMap;
+
 fn main() {
-    let _ = Shape::Triangle(Triangle {
-        width: 1,
-        height: 1,
-    });
-    let _ = Shape::Rectangle((1, 1), (1, 1), (1, 1));
-    let _ = Shape::Circle {
-        origin: (1, 1),
-        radius: 1,
-    };
+    let a = 1.0f32;
+    let b = 10 as f32;
+    let _ = a * b;
 
-    let _a = WebEvent::PageLoad;
-    let _a = WebEvent::PageUpdate;
-    let _c = WebEvent::KeyPress('c');
-    let _d = WebEvent::Paste(String::from("hh"));
-    let _e = WebEvent::Click { x: 1, y: 1 };
+    let t = 9 + 'a' as u8;
+    println!("{t} {}", 9.to_string() + "11");
 
-    println!("zero is {}", Number::Zero as i32);
-    println!("ten is {}", Number::Ten as i32);
+    let ip = Point::<u32, u32> { x: 1, y: 10 };
+    let fp = Point::<f32, f32> { x: 1.5, y: 3.0 };
+    let cp = Point::<f64, u32> { x: 1, y: 1.5 };
 
-    println!("roses are #{:06x}", Color::Red as i32);
-    println!("leaves are #{:04x}", Color::Green as i32);
-    println!("violets are #{:04x}", Color::Blue as i32);
-    // let _ = Foo {}; // error
+    print(&ip);
+    print(&fp);
+    print(&cp);
+    println!("point sum: {}", ip.sum());
+    println!("point x {}", ip.x());
+    let mp = cp.mix(Point::<u32, f64> { x: 1.1, y: 3 });
+    print(&mp);
 
-    let add = MyEnum::Add;
-    println!("{}", add.run(111, 222));
-    println!("{}", MyEnum::Subtract.run(333, 55));
+    let _eee = EEE::default();
 
-    let shape_a = Shape::Rectangle((22, 22), (33, 33), (44, 44));
-    let shape_a = Shape::Circle {
-        origin: (44, 44),
-        radius: 8,
-    };
-    let shape_a = Shape::Triangle(Triangle {
-        width: 88,
-        height: 99,
-    });
-    let ret_a = match shape_a {
-        Shape::Rectangle(x, y, z) => {
-            println!("{:?}, {:?}, {:?}", x, y, z);
-            1
-        }
-        Shape::Triangle(x) => {
-            println!("{:?}", x);
-            2
-        }
-        Shape::Circle {
-            origin: x,
-            radius: y,
-        } => {
-            println!("{:?}, {:?}", x, y);
-            3
-        }
-        _ => 88,
-    };
-    println!("{ret_a}");
-
-    let number = 22;
-    println!("Tell me about {number}");
-
-    match number {
-        1 => println!("One!"),
-        2 | 3 | 4 | 5 | 6 => println!("greater than one!"),
-        5..19 => println!("Big"),
-        _ => println!("Other"),
-    }
-
-    let my_enum = MyEnum::Subtract;
-    if let MyEnum::Add = my_enum {
-        println!("1");
-    } else {
-        println!("2");
-    }
-
-    let mut num = 9;
-    let mut enum_a = MyEnum::Div;
-    while let MyEnum::Div = enum_a {
-        if num >= 0 {
-            println!("Greater than 0 {}", num);
-            num -= 1;
-        } else {
-            println!("Less    than 0 {}", num);
-            enum_a = MyEnum::Add;
-        }
-    }
-
-    let shape_a = Shape::Triangle(Triangle {
-        width: 12,
-        height: 13,
-    });
-    let Shape::Triangle(Triangle { width, height }) = shape_a else {
-        panic!("can't extract triangle..");
-    };
-    println!("width: {}, height: {}", width, height);
-
-    let a = (1, 'a', "hahah");
-    let (b, c, d) = a;
-    println!("{b} {c} {d}");
-
-    let mut v = vec![Some(1), Some(2), Some(3)];
-
-    while let Some(Some(i)) = v.pop() {
-        println!("got {}", i);
-    }
-
-    let refs = &42;
-    match refs {
-        &v => println!("refs points to: {}", v),
-    }
-
-    let mut stu = Student {
-        name: "Chen".to_string(),
-        age: 30,
-        student: false,
-    };
-
-    let Student {
-        ref mut name,
-        age,
-        student: students,
-    } = stu;
-    println!("name {}", name);
-    *name = "wochong".to_string();
-    println!("name {}", name);
-    println!("age {}", age);
-    println!("student {}", students);
-    println!("{:?}", stu);
-
-    let tmp = (1,2,'c');
-    foo(tmp);
-
-    fooStu(stu);
+    let _hhh = <HHH>::default();
+    let _mytype = <MyType::<i32>>::default();
 }
 
-#[derive(Debug)]
-struct Student {
-    name: String,
-    age: i32,
-    student: bool,
+type AAA = HashMap<String, Vec<u8>>;
+type BBB = Vec<AAA>;
+type CCC = HashMap<String, BBB>;
+type DDD = Vec<CCC>;
+type EEE = HashMap<String, DDD>;
+
+struct FFF {
+    hashmap: HashMap<String, EEE>,
 }
 
-#[derive(PartialEq, Debug)]
-enum MyEnum {
-    Add,
-    Subtract,
-    Div,
+struct GGG(FFF);
+
+type HHH = HashMap<String, GGG>;
+
+type MyType<T> = HashMap<String, Vec<HashMap<String, Vec<HashMap<String, Vec<T>>>>>>;
+
+struct Point<T, A> {
+    x: A,
+    y: T,
 }
 
-impl MyEnum {
-    fn run(&self, x: i32, y: i32) -> i32 {
-        match self {
-            Self::Add => x + y,
-            Self::Subtract => x - y,
-            Self::Div => x + y,
+impl<T, A> Point<T, A> {
+    fn mix<X1, X2>(self, other: Point<X1, X2>) -> Point<T, X2> {
+        Point {
+            x: other.x,
+            y: self.y,
         }
     }
 }
 
-enum Foo {}
-
-enum Color {
-    Red = 0xff0000,
-    Green = 0x00ff00,
-    Blue = 0x0000ff,
+impl<T: std::ops::Add<Output = T> + Copy> Point<T, T> {
+    fn sum(&self) -> T {
+        self.x + self.y
+    }
 }
 
-enum Number {
-    Zero = 0,
-    One,
-    Two,
-    Three,
-    Four,
-    Five,
-    Six,
-    Seven,
-    Eight,
-    Night,
-    Ten,
-    Eleven,
-    Twelve,
+impl<T> Point<T, T> {
+    fn x(&self) -> &T {
+        return &self.x;
+    }
 }
+
+impl Point<u32, u32> {
+    fn doit() {}
+}
+
+enum MyOption<T> {
+    Some(T),
+    None,
+}
+
+enum Result<T, E> {
+    OK(T),
+    Err(E),
+}
+
+enum Aaa<T, A, U> {
+    V1(Point<T, A>),
+    V2(Vec<U>),
+}
+
+fn print<T: std::fmt::Display, A: std::fmt::Display>(p: &Point<T, A>) {
+    println!("Point {}, {}", p.x, p.y);
+}
+
+struct List<T>(Vec<T>);
+
+struct Po(u32, u32);
+
+struct Rectangle {
+    p1: Po,
+    p2: Po,
+}
+
+struct Triangle(Po, Po, Po);
+
+struct Circle(Po, u32);
 
 enum Shape {
+    Rectangle(Rectangle),
+    Circle(Circle),
     Triangle(Triangle),
-    Rectangle((u32, u32), (u32, u32), (u32, u32)),
-    Circle { origin: (u32, u32), radius: u32 },
-    Pie,
 }
 
-#[derive(Debug)]
-struct Triangle {
-    width: u32,
-    height: u32,
+struct Axes;
+
+struct Geometry {
+    shape: Shape,
+    axes: Axes,
 }
 
-enum WebEvent {
-    PageLoad,
-    PageUpdate,
-    KeyPress(char),
-    Paste(String),
-    Click { x: i64, y: i64 },
+struct Algebra;
+
+enum level {
+    Elementary,
+    Secondary,
+    High,
 }
 
-fn foo((a, b, c): (u32, u32, char)) {
-    println!("{}", a);
-    println!("{}", b);
-    println!("{}", c);
+enum Course {
+    Geometry(Geometry),
+    Algebra(Algebra),
 }
 
-fn fooStu(Student{name, age,student}: Student) {
-    println!("{name}");
-    println!("{age}");
-    println!("{student}");
+struct MathLesson {
+    math: Course,
+    level: level,
 }
