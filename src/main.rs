@@ -1,169 +1,70 @@
 fn main() {
-    let p = Point { x: 11, y: 22 };
-    display(p.x, p.y);
+    doit1(A);
+    doit2(A);
+    doit3(A);
+    doit4(A);
+    doit5(A);
+    doit6(A);
+    doit7(A);
 
-    let p = Point {
-        x: "string",
-        y: "yyyy",
-    };
-    display(p.x, p.y);
+    doit4(B);
+    doit6(B);
 
-    let p = Point { x: 12.3, y: 13.4 };
-    display(p.x, p.y);
+    doit7(C);
 
-    // let p = Point{x:A, y:A};
-    // display(p.x, p.y);
-    let mut f = Football;
-    f.play(SportType::Land);
-    f.play_mut();
-    f.play_own();
-    let _f = Football::play_some();
-    let _f = <Football as Sport>::play_some();
-
-    doit::<TypeA>("hello".to_string());
-
-    let _f = Foo { x: TypeB };
-
-    println!("{:?}", B::HH);
-    println!("{:?}", <B as TraitC>::HH);
-
-    let ta = TA;
-    ta.play();
-    <TA as Circle>::play(&ta);
-    <TA as Shape>::play(&ta);
+    let p = Pair::<i32> { x: 3, y: 6 };
+    p.cmp_display();
 }
 
-pub trait Iterator {
-    type Item;
-
-    fn next(&self) -> Option<Self::Item>;
-    fn next2(&self) -> Option<<Self as Iterator>::Item>;
-}
-
-// struct A;
-
-trait Sport {
-    type SportType;
-
-    fn play(&self, st: Self::SportType);
-    fn play_mut(&mut self) {}
-    fn play_own(self);
-    fn play_some() -> Self;
-}
-
-enum SportType {
-    Land,
-    Water,
-}
-
-struct Football;
-
-impl Sport for Football {
-    type SportType = SportType;
-
-    fn play(&self, _st: Self::SportType) {}
-    fn play_own(self) {}
-    fn play_some() -> Self {
-        Self
-    }
-}
-
-trait TraitA {
-    type MyType;
-}
-
-struct TypeA;
-impl TraitA for TypeA {
-    type MyType = String;
-}
-
-struct TypeB;
-impl TraitA for TypeB {
-    type MyType = i32;
-}
-
-trait TraitB {
-    type Item: std::fmt::Debug;
-}
-
-#[derive(Debug)]
-struct A;
-
-struct B;
-impl TraitB for B {
-    type Item = A;
-}
-
-fn doit2<T>()
-where
-    T: TraitB,
-    T::Item: std::fmt::Debug + std::fmt::Display,
-{
-}
-
-fn doit<T: TraitA>(_a: T::MyType) {}
-
-struct Foo<T: TraitA<MyType = i32>> {
-    x: T,
-}
-
-trait TraitC {
-    const HH: i32 = 10;
-}
-
-impl TraitC for B {
-    const HH: i32 = 66;
-}
-
-trait TraitD: TraitB + TraitC {}
-
-struct Point<T> {
+struct Pair<T> {
     x: T,
     y: T,
 }
 
-fn display<T: std::fmt::Display>(x: T, y: T) {
-    println!("x is {}, y is {}", x, y);
-}
+// impl std::fmt::Display for i32 {
+//     fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         Ok(())
+//     }
+// }
 
-trait Shape {
-    fn play(&self) {
-        println!("1");
-    }
-}
-trait Circle: Shape {
-    fn play(&self) {
-        println!("2");
-    }
-}
-struct TA;
-struct TB;
-impl Shape for TA {}
-impl Circle for TA {}
-impl TA {
-    fn play(&self) {
-        println!("3");
-    }
-}
-
-mod module_a {
-    pub trait Shape {
-        fn play(&self) {
-            println!("1");
+impl<T> Pair<T>
+where
+    T: std::fmt::Display + std::cmp::PartialOrd,
+{
+    fn cmp_display(&self) {
+        if self.x >= self.y {
+            println!("the largest num is {}", self.x);
+        } else {
+            println!("the largest num is {}", self.y);
         }
     }
-
-    pub struct A;
-    impl Shape for A {}
 }
 
-mod module_b {
-    use super::module_a::A;
-    // use super::module_a::Shape;
-    use crate::module_a::Shape;
+impl<T: TraitB> TraitA for T {}
 
-    fn doit() {
-        let a = A;
-        a.play();
-    }
-}
+impl TraitA for u32 {}
+
+trait TraitA {}
+trait TraitB {}
+trait TraitC {}
+
+struct A;
+struct B;
+struct C;
+
+impl TraitA for A {}
+impl TraitB for A {}
+impl TraitC for A {}
+
+impl TraitB for B {}
+impl TraitC for B {}
+
+impl TraitC for C {}
+
+fn doit1<T: TraitA + TraitB + TraitC>(_t: T) {}
+fn doit2<T: TraitA + TraitB>(_t: T) {}
+fn doit3<T: TraitA + TraitC>(_t: T) {}
+fn doit4<T: TraitB + TraitC>(_t: T) {}
+fn doit5<T: TraitA>(_t: T) {}
+fn doit6<T: TraitB>(_t: T) {}
+fn doit7<T: TraitC>(_t: T) {}
