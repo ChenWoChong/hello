@@ -1,70 +1,61 @@
 fn main() {
-    doit1(A);
-    doit2(A);
-    doit3(A);
-    doit4(A);
-    doit5(A);
-    doit6(A);
-    doit7(A);
+    let _ta = Atype::<i32> { a: 8 };
 
-    doit4(B);
-    doit6(B);
-
-    doit7(C);
-
-    let p = Pair::<i32> { x: 3, y: 6 };
-    p.cmp_display();
+    let p = Point { x: 1, y: 2 };
+    p.echo();
+    let np = p.add(Point { x: 3, y: 4 });
+    np.echo();
+    let np = p.add(38);
+    np.echo();
 }
 
-struct Pair<T> {
-    x: T,
-    y: T,
+trait TraitA<T> {}
+
+struct AType {}
+impl TraitA<i32> for AType {}
+
+struct Atype<U> {
+    a: U,
 }
-
-// impl std::fmt::Display for i32 {
-//     fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         Ok(())
-//     }
-// }
-
-impl<T> Pair<T>
+impl<T, U> TraitA<T> for Atype<U>
 where
-    T: std::fmt::Display + std::cmp::PartialOrd,
+    T: std::fmt::Debug,
+    U: PartialEq,
 {
-    fn cmp_display(&self) {
-        if self.x >= self.y {
-            println!("the largest num is {}", self.x);
-        } else {
-            println!("the largest num is {}", self.y);
+}
+
+trait Add<T> {
+    type Output;
+    fn add(&self, hrs: T) -> Self::Output;
+}
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+impl Add<Point> for Point {
+    type Output = Self;
+    fn add(&self, hrs: Point) -> Self::Output {
+        Point {
+            x: self.x + hrs.x,
+            y: self.y + hrs.y,
         }
     }
 }
 
-impl<T: TraitB> TraitA for T {}
+impl Add<i32> for Point {
+    type Output = Self;
+    fn add(&self, hrs: i32) -> Self::Output {
+        Point {
+            x: self.x + hrs,
+            y: self.y + hrs,
+        }
+    }
+}
 
-impl TraitA for u32 {}
-
-trait TraitA {}
-trait TraitB {}
-trait TraitC {}
-
-struct A;
-struct B;
-struct C;
-
-impl TraitA for A {}
-impl TraitB for A {}
-impl TraitC for A {}
-
-impl TraitB for B {}
-impl TraitC for B {}
-
-impl TraitC for C {}
-
-fn doit1<T: TraitA + TraitB + TraitC>(_t: T) {}
-fn doit2<T: TraitA + TraitB>(_t: T) {}
-fn doit3<T: TraitA + TraitC>(_t: T) {}
-fn doit4<T: TraitB + TraitC>(_t: T) {}
-fn doit5<T: TraitA>(_t: T) {}
-fn doit6<T: TraitB>(_t: T) {}
-fn doit7<T: TraitC>(_t: T) {}
+impl Point {
+    fn echo(&self) {
+        println!("x is {}, y is {}", self.x, self.y);
+    }
+}
