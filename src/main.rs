@@ -1,32 +1,32 @@
-fn main() {
-    assert_eq!(doit(0), Ttype::A(Atype));
-    assert_eq!(doit(1), Ttype::B(Btype));
-    assert_eq!(doit(2), Ttype::C(Ctype));
+pub fn merge(nums1: &mut Vec<i32>, m: i32, nums2: &mut Vec<i32>, n: i32) {
+    let mut idx = (m + n - 1) as usize;
+    let mut left = (m - 1) as usize;
+    let mut right = (n - 1) as usize;
+    while right < n as usize {
+        if left < m as usize && nums1[left] >= nums2[right] {
+            nums1[idx] = nums1[left];
+            left -= 1;
+        } else {
+            nums1[idx] = nums2[right];
+            right -= 1;
+        }
+        idx -= 1;
+    }
 }
 
-#[derive(Debug, PartialEq)]
-struct Atype;
-#[derive(Debug, PartialEq)]
-struct Btype;
-#[derive(Debug, PartialEq)]
-struct Ctype;
+fn main() {}
 
-#[derive(Debug, PartialEq)]
-enum Ttype {
-    A(Atype),
-    B(Btype),
-    C(Ctype),
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-fn doit(num: i32) -> Ttype {
-    if num == 0 {
-        let a = Atype;
-        return Ttype::A(a);
-    } else if num == 1 {
-        let b = Btype;
-        return Ttype::B(b);
-    } else {
-        let c = Ctype;
-        return Ttype::C(c);
+    #[test]
+    fn test_merge() {
+        let mut n1 = vec![1, 2, 3, 4, 0, 0, 0];
+        let mut n2 = vec![5, 6, 7];
+        let m: i32 = 4;
+        let n: i32 = 3;
+        merge(&mut n1, m, &mut n2, n);
+        assert_eq!(vec![1, 2, 3, 4, 5, 6, 7], n1);
     }
 }
