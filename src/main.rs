@@ -1,32 +1,85 @@
-pub fn merge(nums1: &mut Vec<i32>, m: i32, nums2: &mut Vec<i32>, n: i32) {
-    let mut idx = (m + n - 1) as usize;
-    let mut left = (m - 1) as usize;
-    let mut right = (n - 1) as usize;
-    while right < n as usize {
-        if left < m as usize && nums1[left] >= nums2[right] {
-            nums1[idx] = nums1[left];
-            left -= 1;
-        } else {
-            nums1[idx] = nums2[right];
-            right -= 1;
-        }
-        idx -= 1;
+fn main() {
+    let _a = doit0();
+
+    let _a = doit::<Atype>();
+    let _b = doit::<Btype>();
+    let _c = doit::<Ctype>();
+
+    let _a = doit2();
+
+    let _a = doit3(1);
+
+    doit4(&Atype);
+    doit4(&Btype);
+    doit4(&Ctype);
+
+    let a = Atype;
+    let b = Btype;
+    let c = Ctype;
+    let _v: Vec<&dyn B> = vec![&a, &b, &c];
+}
+
+#[derive(Debug)]
+struct Atype;
+struct Btype;
+struct Ctype;
+
+trait A {
+    fn new() -> Self;
+}
+
+impl A for Atype {
+    fn new() -> Self {
+        Atype
     }
 }
 
-fn main() {}
+impl A for Btype {
+    fn new() -> Self {
+        Btype
+    }
+}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl A for Ctype {
+    fn new() -> Self {
+        Ctype
+    }
+}
 
-    #[test]
-    fn test_merge() {
-        let mut n1 = vec![1, 2, 3, 4, 0, 0, 0];
-        let mut n2 = vec![5, 6, 7];
-        let m: i32 = 4;
-        let n: i32 = 3;
-        merge(&mut n1, m, &mut n2, n);
-        assert_eq!(vec![1, 2, 3, 4, 5, 6, 7], n1);
+fn doit0() -> Box<dyn std::fmt::Debug> {
+    let a = Atype;
+    Box::new(a)
+}
+
+fn doit<T: A>() -> T {
+    T::new()
+}
+
+fn doit2() -> impl A {
+    Atype
+}
+
+trait B {}
+impl B for Atype {}
+impl B for Btype {}
+impl B for Ctype {}
+
+fn doit3(n: i32) -> Box<dyn B> {
+    if n == 0 {
+        Box::new(Atype)
+    } else if n == 1 {
+        return Box::new(Btype);
+    } else {
+        return Box::new(Ctype);
+    }
+}
+
+fn doit4(_a: &dyn B) {}
+
+pub struct S(String);
+
+pub trait Test {
+    fn tt(S(t): S) {
+        println!("{}", t);
     }
 }
