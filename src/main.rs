@@ -78,13 +78,24 @@ fn main() {
 
     let p = Point::from((8, 8));
     println!("{}", p);
-    let p = Into::<Point>::into((9,9));
+    let p = Into::<Point>::into((9, 9));
     println!("{}", p);
 
+    let p = vec![Color(0, 0, 0)];
+    println!("{}", p.len());
+    let p = guarantee_length(p, 10);
+    println!("{}", p.len());
 }
 
 pub trait Default {
     fn default() -> Self;
+}
+
+fn guarantee_length<T: Default>(mut vec: Vec<T>, min_len: usize) -> Vec<T> {
+    for _ in 0..min_len.saturating_add(vec.len()) {
+        vec.push(T::default());
+    }
+    vec
 }
 
 #[allow(dead_code)]
@@ -243,4 +254,47 @@ impl From<(u8, u8)> for Point {
     fn from((x, y): (u8, u8)) -> Self {
         Point { x, y }
     }
+}
+
+pub trait MyTryFrom<T> {
+    type Error;
+    fn try_from(value: T) -> Result<Self, Self::Error>
+    where
+        Self: Sized;
+}
+
+pub trait MyTryInto<T> {
+    type Error;
+    fn tyr_into(self) -> Result<T, Self::Error>;
+}
+
+pub trait MyFromStr {
+    type Error;
+    fn from_str(str: &str) -> Result<Self, Self::Error>
+    where
+        Self: Sized;
+}
+
+pub fn example_from_str<T: std::str::FromStr>(t: &str) {
+    let _tmp: Result<T, _> = std::str::FromStr::from_str(t);
+    let _tmp = T::from_str(t);
+    let _tmp: Result<T, _> = t.parse();
+    let _tmp = t.parse::<T>();
+}
+
+pub trait MyAsRef<T> {
+    fn as_ref(&self) -> &T;
+}
+
+fn take_str(_s: &str) {}
+
+fn take_asref_str(_s: impl AsRef<str>) {}
+
+pub fn test_as_ref(str: &str, borrow: &String, owned: String) {
+    take_str(str);
+    take_str(borrow);
+    // take_str(owned);
+    take_asref_str(str);
+    take_asref_str(borrow);
+    take_asref_str(owned);
 }
