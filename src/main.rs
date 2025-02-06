@@ -1,148 +1,82 @@
-use std::sync::Arc;
+use std::time::Duration;
+use std::time::SystemTime;
+use tokio::{
+    fs::File,
+    io::{AsyncReadExt, AsyncWriteExt},
+    task, time,
+};
 
-fn main() {
-    let _a = foo();
-    let _a = foo1();
-    let _a = foo2();
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
+    // tokio::runtime::Builder::new_current_thread()
+    //     .enable_all()
+    //     .build()
+    //     .unwrap()
+    //     .block_on(foo())
+    foo().await;
+    let _ = write().await;
+    let _ = read().await;
 
-    let ba = foo1();
-    let a = *ba;
-    println!("{:?}", ba);
-    println!("{:?}", a);
+    let mut interval = time::interval(Duration::from_millis(10));
+    println!("now: {:?}", SystemTime::now());
+    interval.tick().await;
+    println!("now: {:?}", SystemTime::now());
+    interval.tick().await;
+    println!("now: {:?}", SystemTime::now());
+    interval.tick().await;
 
-    let mut ba = foo2();
-    ba.play();
-    *ba = Point { x: 100, y: 100 };
-    ba.play();
+    let ts_a = task::spawn(async move {
+        let a = "hahah";
+        println!("task print: {}", a);
+        a
+    });
 
-    let mut anb = ba.clone();
-    *anb = Point { x: 4, y: 6 };
-    anb.play();
-    let y = &anb;
-    y.play();
-    let my = &mut anb;
-    **my = Point { x: 3, y: 5 };
-    anb.play();
+    let res = ts_a.await.unwrap();
+    assert_eq!(res, "hahah");
 
-    let a = *ba;
-    // println!("{:?}", ba);
-    println!("{:?}", a);
+    let ts_b = task::spawn(async move {
+        panic!("some bad thing happend!");
+    });
 
-    let mut ba = foo2();
-    ba.play_ref();
-    ba.play_mutref();
-    ba.play_own();
-    let ba = foo2();
-    ba.play_boxed();
+    assert_eq!(ts_b.await.is_err(), true);
 
-    let a = Box::new(Atype {});
-    doit(a);
-    let b = Box::new(Btype {});
-    doit(b);
-    let c = Box::new(Ctype {});
-    doit(c);
+    let ops = vec![1, 2, 3];
+    let mut tasks = Vec::with_capacity(ops.len());
+    for num in ops {
+        tasks.push(task::spawn(do_some_idx(num)));
+    }
 
-    let _i = Mystruct {
-        a: Box::new(Atype {}),
+    let mut outputs = Vec::with_capacity(tasks.len());
+    for t in tasks {
+        outputs.push(t.await.unwrap());
+    }
+    println!("{:?}", outputs);
+}
+
+pub async fn foo() {
+    let a = async {
+        println!("hello foo");
     };
-    let _i = Mystruct {
-        a: Box::new(Btype {}),
-    };
-    let _i = Mystruct {
-        a: Box::new(Ctype {}),
-    };
-    let _b = Mystruct {
-        a: Box::new(Ctype {}),
-    };
-
-    let a = std::sync::Arc::new(Point { x: 1, y: 2 });
-    let an = a.clone();
-    a.play();
-    an.play();
-    let ann = an.clone();
-    ann.play();
-
-    let c = std::sync::Arc::new(Point { x: 1, y: 2 });
-    c.play();
-    c.play_ref();
-    // c.play_mutref();
-    // c.play_own();
-    c.play_arc();
-    // c.play();
+    a.await;
+    async move {}.await;
 }
 
-fn foo() -> String {
-    let a = "abc".to_string();
-    a
+async fn write() -> std::io::Result<()> {
+    let mut f = File::create("test.txt").await.unwrap();
+    f.write_all(b"hello world, wochong").await.unwrap();
+    Ok(())
 }
 
-fn foo1() -> Box<u32> {
-    let n = 10u32;
-    let boxed = Box::new(n);
-    let _m = n;
-    let _bb = boxed.clone();
-    boxed
-}
-#[derive(Debug, Clone)]
-pub struct Point {
-    x: i32,
-    y: i32,
+async fn read() -> std::io::Result<()> {
+    let mut f = File::open("test.txt").await.unwrap();
+    let mut cnt = vec![];
+    f.read_to_end(&mut cnt).await.unwrap();
+    println!("read content: {} {:?}", cnt.len(), cnt);
+    Ok(())
 }
 
-impl Point {
-    fn play(&self) {
-        println!("Point x: {}, y: {}", self.x, self.y);
-    }
-
-    fn play_ref(&self) {
-        println!("Point x: {}, y: {}", self.x, self.y);
-    }
-
-    fn play_mutref(&mut self) {
-        println!("Point x: {}, y: {}", self.x, self.y);
-    }
-    fn play_own(self) {
-        println!("Point x: {}, y: {}", self.x, self.y);
-    }
-    fn play_boxed(self: Box<Self>) {
-        println!("Point x: {}, y: {}", self.x, self.y);
-    }
-
-    fn play_arc(self: Arc<Self>) {
-        println!("Point x: {}, y: {}", self.x, self.y);
-    }
+async fn do_some_idx(id: i32) -> String {
+    let f = format!("this is china {}", id);
+    println!("{}", f);
+    f
 }
-
-fn foo2() -> Box<Point> {
-    let p = Point { x: 1, y: 1 };
-    let boxed = Box::new(p);
-    // let q = p;
-    boxed
-}
-
-struct Atype {}
-struct Btype {}
-struct Ctype {}
-
-struct Mystruct {
-    #[allow(dead_code)]
-    a: Box<dyn Atrait>,
-}
-
-pub struct Mystruct2<'a> {
-    #[allow(dead_code)]
-    a: &'a dyn Atrait,
-}
-
-#[derive(Debug)]
-pub struct Point2 {
-    x: i32,
-    y: i32,
-}
-
-trait Atrait {}
-impl Atrait for Atype {}
-impl Atrait for Btype {}
-impl Atrait for Ctype {}
-
-fn doit(_t: Box<dyn Atrait>) {}
