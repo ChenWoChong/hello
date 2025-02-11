@@ -1,82 +1,56 @@
-use std::time::Duration;
-use std::time::SystemTime;
-use tokio::{
-    fs::File,
-    io::{AsyncReadExt, AsyncWriteExt},
-    task, time,
-};
+use std::sync::{atomic::AtomicU32, Arc};
+use tokio::sync::{Mutex, RwLock};
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main]
 async fn main() {
-    // tokio::runtime::Builder::new_current_thread()
-    //     .enable_all()
-    //     .build()
-    //     .unwrap()
-    //     .block_on(foo())
-    foo().await;
-    let _ = write().await;
-    let _ = read().await;
+    let db = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+    println!("{:?}", db);
+    let arc_db = Arc::new(Mutex::new(db));
+    let arc_db2 = arc_db.clone();
+    let arc_db3 = arc_db.clone();
 
-    let mut interval = time::interval(Duration::from_millis(10));
-    println!("now: {:?}", SystemTime::now());
-    interval.tick().await;
-    println!("now: {:?}", SystemTime::now());
-    interval.tick().await;
-    println!("now: {:?}", SystemTime::now());
-    interval.tick().await;
-
-    let ts_a = task::spawn(async move {
-        let a = "hahah";
-        println!("task print: {}", a);
-        a
+    let task_a = tokio::task::spawn(async move {
+        let mut db = arc_db.lock().await;
+        db[3] = 100;
+        assert_eq!(db[3], 100);
+        println!("{:?}", db);
     });
 
-    let res = ts_a.await.unwrap();
-    assert_eq!(res, "hahah");
-
-    let ts_b = task::spawn(async move {
-        panic!("some bad thing happend!");
+    let task_b = tokio::task::spawn(async move {
+        let mut db = arc_db2.lock().await;
+        db[3] = 111;
+        assert_eq!(db[3], 111);
+        println!("{:?}", db);
     });
 
-    assert_eq!(ts_b.await.is_err(), true);
+    let _ = task_a.await.unwrap();
+    _ = task_b.await.unwrap();
+    println!("{:?}", arc_db3);
 
-    let ops = vec![1, 2, 3];
-    let mut tasks = Vec::with_capacity(ops.len());
-    for num in ops {
-        tasks.push(task::spawn(do_some_idx(num)));
+    let db = RwLock::new(6);
+    {
+        let a = db.read().await;
+        let b = db.read().await;
+        assert_eq!(*a, 6);
+        assert_eq!(*b, 6);
     }
 
-    let mut outputs = Vec::with_capacity(tasks.len());
-    for t in tasks {
-        outputs.push(t.await.unwrap());
+    {
+        let mut r = db.write().await;
+        *r = 8;
+        // let c = db.read().await;
+        // assert_eq!(*c, 8);
+        // 不能读取，因为写锁没有释放，会死锁等待
     }
-    println!("{:?}", outputs);
-}
+    {
+        let c = db.read().await;
+        assert_eq!(*c, 8);
+    }
 
-pub async fn foo() {
-    let a = async {
-        println!("hello foo");
-    };
-    a.await;
-    async move {}.await;
-}
+    let _atom_num = AtomicU32::new(5);
+    let _arc_atomic_num = Arc::new(AtomicU32::new(5));
 
-async fn write() -> std::io::Result<()> {
-    let mut f = File::create("test.txt").await.unwrap();
-    f.write_all(b"hello world, wochong").await.unwrap();
-    Ok(())
-}
-
-async fn read() -> std::io::Result<()> {
-    let mut f = File::open("test.txt").await.unwrap();
-    let mut cnt = vec![];
-    f.read_to_end(&mut cnt).await.unwrap();
-    println!("read content: {} {:?}", cnt.len(), cnt);
-    Ok(())
-}
-
-async fn do_some_idx(id: i32) -> String {
-    let f = format!("this is china {}", id);
-    println!("{}", f);
-    f
+    let mut an = AtomicU32::new(6);
+    *an.get_mut() = 12;
+    assert_eq!(*an.get_mut(), 12);
 }
