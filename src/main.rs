@@ -1,76 +1,45 @@
-fn main() {
-    let my_url = "https://www.baidu.com".to_string();
-    let _url = Url {
-        protocol: &my_url[0..1],
-        host: &my_url[2..3],
-        path: &my_url[4..5],
-        qurey: &my_url[7..9],
-        fragment: &my_url[10..11],
-    };
+use axum::{
+    extract::Query,
+    response::{Html, IntoResponse},
+    routing::get,
+    Router,
+};
+use serde::Deserialize;
+use tower_http::services::{ServeDir, ServeFile};
+use tower_http::trace::TraceLayer;
 
-    let a = "i have apple, this is real apple.".to_string();
-    let sum;
-    {
-        let b = "i have apple pen".to_string();
-        sum = longest(a.as_ref(), b.as_ref());
-        println!("longest is {}", sum);
-    }
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt::init();
+    let serve_dir = ServeDir::new("assets").not_found_service(ServeFile::new("assets/index.html"));
+
+    let app = Router::new()
+        .route("/", get(handler))
+        .route("/query", get(query))
+        .nest_service("/assets2", serve_dir)
+        .nest_service("/assets", ServeDir::new("assets"))
+        .layer(TraceLayer::new_for_http());
+
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
+        .await
+        .unwrap();
+    tracing::debug!("http listen on: {}", listener.local_addr().unwrap());
+    axum::serve(listener, app).await.unwrap();
+}
+
+async fn handler() -> Html<&'static str> {
+    Html("<h1> hello world</h1>")
 }
 
 #[allow(dead_code)]
-struct Url<'a> {
-    protocol: &'a str,
-    host: &'a str,
-    path: &'a str,
-    qurey: &'a str,
-    fragment: &'a str,
+#[derive(Debug, Deserialize)]
+struct InputParams {
+    foo: i32,
+    bar: String,
+    third: Option<i32>,
 }
 
-impl<'a> Url<'a> {
-    fn _play() {}
-}
-
-#[allow(dead_code)]
-pub struct Request<'a> {
-    url: Url<'a>,
-    body: String,
-}
-
-static AA: &'static str = "aaa";
-pub fn foo() -> &'static str {
-    AA
-}
-
-pub fn foo1(a: &str) -> &str {
-    a
-}
-
-pub fn foo2<'a, 'b: 'a>(i: i32, a: &'a str, b: &'b str) -> &'a str {
-    if i == 10 {
-        a
-    } else {
-        println!("{}", b);
-        b
-    }
-}
-
-fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
-    if x.len() > y.len() {
-        x
-    } else {
-        y
-    }
-}
-
-pub struct A {
-    foo: String,
-}
-
-impl A {
-    pub fn play(&self, a: &str, b: &str) -> &str {
-        &self.foo
-    }
-    pub fn play2<'a>(&self, a: &'a str, b: &str) -> &'a str {
-        a
-    }
+async fn query(Query(params): Query<InputParams>) -> impl IntoResponse {
+    tracing::debug!("query params {:?}", params);
+    Html("<h3> Test query </h3>")
 }
