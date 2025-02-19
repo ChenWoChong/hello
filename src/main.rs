@@ -1,7 +1,7 @@
 use axum::{
-    extract::Query,
+    extract::{Form, Query},
     response::{Html, IntoResponse},
-    routing::get,
+    routing::{get, post},
     Router,
 };
 use serde::Deserialize;
@@ -16,6 +16,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(handler))
         .route("/query", get(query))
+        .route("/form", post(accept_form))
         .nest_service("/assets2", serve_dir)
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(TraceLayer::new_for_http());
@@ -42,4 +43,17 @@ struct InputParams {
 async fn query(Query(params): Query<InputParams>) -> impl IntoResponse {
     tracing::debug!("query params {:?}", params);
     Html("<h3> Test query </h3>")
+}
+
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+struct Input {
+    name: String,
+    age: i32,
+    email: String,
+}
+
+async fn accept_form(Form(input): Form<Input>) -> impl IntoResponse {
+    tracing::debug!("input content: {:?}", input);
+    Html("<h3>Form post</h3>")
 }
