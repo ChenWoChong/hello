@@ -1,5 +1,6 @@
+use askama::Template;
 use axum::{
-    extract::{rejection::JsonRejection, Form, Json, Query},
+    extract::{rejection::JsonRejection, Form, Json, Path, Query},
     response::{Html, IntoResponse, Redirect},
     routing::{get, post},
     Router,
@@ -18,6 +19,7 @@ async fn main() {
         .route("/", get(handler))
         .route("/hello", get(hello))
         .route("/query", get(query))
+        .route("/template", get(template))
         .route("/default_json", post(get_json))
         .route("/form", post(accept_form))
         .route("/json", post(accept_json))
@@ -92,4 +94,14 @@ async fn hello() -> impl IntoResponse {
 async fn get_json(Json(input): Json<Input>) -> impl IntoResponse {
     tracing::debug!("get json: {:?}", input);
     Json(json!({ "result": "ok", "number": 1, }))
+}
+
+#[derive(Template)]
+#[template(path = "hello.html")]
+struct HelloTemplate {
+    name: String,
+}
+
+async fn template(Path(name): Path<String>) -> impl IntoResponse {
+    HelloTemplate { name: name }.to_string()
 }
