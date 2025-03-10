@@ -17,3 +17,4 @@ bb8 = "0.9.0"
 bb8-postgres = "0.9.0"
 tokio-postgres = "0.7.13"
 uuid = {version="1.14.0", features=["serde", "v4"]}
+nom = "8.0.0"
