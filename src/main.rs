@@ -1,97 +1,92 @@
-use nom::bytes::complete::{tag, take_while_m_n};
-use nom::character::complete::i32;
-use nom::combinator::map_res;
-use nom::sequence::{delimited, separated_pair};
-use nom::{IResult, Parser};
-use std::error::Error;
+use std::{slice, str};
+#[allow(static_mut_refs)]
+fn main() {
+    let mut u = IntOrFloat { f: 1.0 };
+    assert_eq!(unsafe { u.i }, 1065353216);
+    u.i = 1073741824;
+    assert_eq!(unsafe { u.f }, 2.0);
 
-pub fn do_nothing_parser(input: &str) -> IResult<&str, &str> {
-    Ok((input, ""))
+    let v = [1, 2, 3];
+    add_counter(6);
+    unsafe {
+        println!("COUNTER: {}", COUNTER);
+        // println!("{}", v[3]);
+        println!("v[2]: {}", v[2]);
+    }
+
+    let num: i32 = 10;
+    let num_ptr: *const i32 = &num;
+    let mut nu: i32 = 11;
+    let mut_nu_ptr: *mut i32 = &mut nu;
+    unsafe {
+        println!("num {}", *num_ptr);
+        println!("nu {}", *mut_nu_ptr);
+    }
+
+    let tt = Box::new(66);
+    let tt = Box::into_raw(tt);
+    unsafe {
+        let _ = Box::from_raw(tt);
+    }
+
+    use std::ptr;
+
+    let null_v: *const i32 = ptr::null();
+    assert!(null_v.is_null());
+
+    let mut_null: *mut i32 = ptr::null_mut();
+    assert!(mut_null.is_null());
+
+    aa();
+
+    let mut ass = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+    println!("ass:\t {:?}", ass);
+    let (l, r) = split_slice(&mut ass, 3);
+    println!("left:\t {:?}", l);
+    println!("right:\t {:?}", r);
+    println!("ass:\t {:?}", ass);
+
+    unsafe {
+        assert_eq!(ass.get_unchecked(2), &3);
+    }
+
+    let heart = vec![240, 159, 146, 150];
+
+    let heart_str = unsafe { str::from_utf8_unchecked(&heart) };
+    assert_eq!("💖", heart_str);
+    println!("heart:\t {}", heart_str);
 }
 
-fn parse_input(input: &str) -> IResult<&str, &str> {
-    tag("abc")(input)
+fn aa() {
+    let a = &10 as *const i32;
+    let b = &mut 11 as *mut i32;
+
+    unsafe {
+        println!("a {}", *a);
+        println!("b {}", *b);
+    }
+}
+union IntOrFloat {
+    i: u32,
+    f: f32,
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let str = "abcdefg";
-    let (remainning_input, output) = do_nothing_parser(str)?;
-    assert_eq!(remainning_input, str);
-    assert_eq!(output, "");
+static mut COUNTER: i32 = 30;
 
-    let (leftover_input, output) = parse_input(str)?;
-    assert_eq!(leftover_input, "defg");
-    assert_eq!(output, "abc");
-
-    let (_, parsed) = parse_coordinate("(3, 5)")?;
-    assert_eq!(parsed, Coordinate { x: 3, y: 5 });
-
-    let (_, parsed) = parse_coordinate("(2, -4)")?;
-    assert_eq!(parsed, Coordinate { x: 2, y: -4 });
-
-    let parsing_error = parse_coordinate("(2,)");
-    assert!(parsing_error.is_err());
-
-    let parsing_error = parse_coordinate("(,3)");
-    assert!(parsing_error.is_err());
-
-    let parsing_error = parse_coordinate("Ferris");
-    assert!(parsing_error.is_err());
-
-    Ok(())
+fn add_counter(inc: i32) {
+    unsafe {
+        COUNTER += inc;
+    }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Coordinate {
-    x: i32,
-    y: i32,
-}
-
-fn parse_integer_pair(input: &str) -> IResult<&str, (i32, i32)> {
-    separated_pair(i32, tag(", "), i32).parse(input)
-}
-
-fn parse_coordinate(input: &str) -> IResult<&str, Coordinate> {
-    let (remaining, (x, y)) = delimited(tag("("), parse_integer_pair, tag(")")).parse(input)?;
-    Ok((remaining, Coordinate { x, y }))
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Color {
-    pub red: u8,
-    pub green: u8,
-    pub blue: u8,
-}
-
-pub fn from_hex(input: &str) -> Result<u8, std::num::ParseIntError> {
-    u8::from_str_radix(input, 16)
-}
-
-pub fn is_hex_digit(c: char) -> bool {
-    c.is_digit(16)
-}
-
-pub fn hex_primary(input: &str) -> IResult<&str, u8> {
-    map_res(take_while_m_n(2, 2, is_hex_digit), from_hex).parse(input)
-}
-
-pub fn hex_color(input: &str) -> IResult<&str, Color> {
-    let (input, _) = tag("#")(input)?;
-    let (input, (red, green, blue)) = (hex_primary, hex_primary, hex_primary).parse(input)?;
-    Ok((input, Color { red, green, blue }))
-}
-
-#[test]
-fn parse_color() {
-    assert_eq!(
-        hex_color("#2F14DF"),
-        Ok((
-            "",
-            Color {
-                red: 47,
-                green: 20,
-                blue: 223
-            }
-        ))
-    );
+fn split_slice(v: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {
+    let len = v.len();
+    let ptr = v.as_mut_ptr();
+    assert!(mid <= len);
+    unsafe {
+        (
+            slice::from_raw_parts_mut(ptr, mid),
+            slice::from_raw_parts_mut(ptr.add(mid), len - mid),
+        )
+    }
 }
