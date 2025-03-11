@@ -1,7 +1,8 @@
-use nom::bytes::complete::tag;
+use nom::bytes::complete::{tag, take_while_m_n};
 use nom::character::complete::i32;
+use nom::combinator::map_res;
 use nom::sequence::{delimited, separated_pair};
-use nom::IResult;
+use nom::{IResult, Parser};
 use std::error::Error;
 
 pub fn do_nothing_parser(input: &str) -> IResult<&str, &str> {
@@ -47,11 +48,50 @@ pub struct Coordinate {
 }
 
 fn parse_integer_pair(input: &str) -> IResult<&str, (i32, i32)> {
-    separated_pair(i32, tag(", "), i32)(input)
+    separated_pair(i32, tag(", "), i32).parse(input)
 }
-// fn parse_coordinate(input: &str) -> IResult<&str, >
 
 fn parse_coordinate(input: &str) -> IResult<&str, Coordinate> {
-    let (remaining, (x, y)) = delimited(tag("("), parse_integer_pair, tag(")"))(input)?;
+    let (remaining, (x, y)) = delimited(tag("("), parse_integer_pair, tag(")")).parse(input)?;
     Ok((remaining, Coordinate { x, y }))
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Color {
+    pub red: u8,
+    pub green: u8,
+    pub blue: u8,
+}
+
+pub fn from_hex(input: &str) -> Result<u8, std::num::ParseIntError> {
+    u8::from_str_radix(input, 16)
+}
+
+pub fn is_hex_digit(c: char) -> bool {
+    c.is_digit(16)
+}
+
+pub fn hex_primary(input: &str) -> IResult<&str, u8> {
+    map_res(take_while_m_n(2, 2, is_hex_digit), from_hex).parse(input)
+}
+
+pub fn hex_color(input: &str) -> IResult<&str, Color> {
+    let (input, _) = tag("#")(input)?;
+    let (input, (red, green, blue)) = (hex_primary, hex_primary, hex_primary).parse(input)?;
+    Ok((input, Color { red, green, blue }))
+}
+
+#[test]
+fn parse_color() {
+    assert_eq!(
+        hex_color("#2F14DF"),
+        Ok((
+            "",
+            Color {
+                red: 47,
+                green: 20,
+                blue: 223
+            }
+        ))
+    );
 }
