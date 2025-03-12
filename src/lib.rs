@@ -25,7 +25,7 @@ fn calc_fib(n: usize) -> PyResult<()> {
 }
 
 #[pymodule]
-fn rust_fib(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn rust_fib(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(calc_fib, m)?)?;
     Ok(())
 }
