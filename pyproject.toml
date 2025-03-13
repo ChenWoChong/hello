@@ -1,0 +1,17 @@
+[build-system]
+requires = ["maturin>=1,<2"]
+build-backend = "maturin"
+
+[tool.maturin]
+# 包含 Python 包和 Rust 代码
+include = ["word_count/**/*", "src/**/*"]
+
+[project]
+name = "word_count"
+version = "0.1.0"
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-benchmark"]
+
+[tool.pytest.ini_options]
+addopts = "--benchmark-disable"
